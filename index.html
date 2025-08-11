@@ -1,11 +1,240 @@
-<!DOCTYPE html>
-<html lang="it">
-<head>
-  <meta charset="UTF-8" />
-  <title>Il mio primo sito GitHub</title>
-</head>
-<body>
-  <h1>Ciao, benvenuto sul mio sito!</h1>
-  <p>Questo è un sito creato con GitHub Pages.</p>
-</body>
-</html>
+import React, { useState, useRef, useEffect } from "react";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { SplitText as GSAPSplitText } from "gsap/SplitText";
+
+gsap.registerPlugin(ScrollTrigger, GSAPSplitText);
+
+const SplitText = ({
+  text,
+  className = "",
+  delay = 100,
+  duration = 0.6,
+  ease = "power3.out",
+  splitType = "chars",
+  from = { opacity: 0, y: 40 },
+  to = { opacity: 1, y: 0 },
+  threshold = 0.1,
+  rootMargin = "-100px",
+  textAlign = "center",
+  onComplete,
+}) => {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!ref.current || !text) return;
+
+    const el = ref.current;
+    const absoluteLines = splitType === "lines";
+    if (absoluteLines) el.style.position = "relative";
+
+    let splitter;
+    try {
+      splitter = new GSAPSplitText(el, {
+        type: splitType,
+        absolute: absoluteLines,
+        linesClass: "split-line",
+      });
+    } catch (error) {
+      console.error("Failed to create SplitText:", error);
+      return;
+    }
+
+    let targets;
+    switch (splitType) {
+      case "lines":
+        targets = splitter.lines;
+        break;
+      case "words":
+        targets = splitter.words;
+        break;
+      case "chars":
+        targets = splitter.chars;
+        break;
+      default:
+        targets = splitter.chars;
+    }
+
+    if (!targets || targets.length === 0) {
+      splitter.revert();
+      return;
+    }
+
+    targets.forEach((t) => {
+      t.style.willChange = "transform, opacity";
+    });
+
+    const tl = gsap.timeline({
+      onComplete: () => {
+        gsap.set(targets, { ...to, clearProps: "willChange" });
+        onComplete && onComplete();
+        splitter.revert();
+      },
+    });
+
+    tl.set(targets, { ...from });
+    tl.to(targets, {
+      ...to,
+      duration,
+      ease,
+      stagger: delay / 1000,
+    });
+
+    return () => {
+      tl.kill();
+      splitter.revert();
+    };
+  }, [text, delay, duration, ease, splitType, from, to, onComplete]);
+
+  return (
+    <p
+      ref={ref}
+      className={`split-parent ${className}`}
+      style={{
+        textAlign,
+        overflow: "hidden",
+        display: "inline-block",
+        whiteSpace: "normal",
+        wordWrap: "break-word",
+        fontSize: "1.5rem",
+        margin: "40px auto",
+      }}
+    >
+      {text}
+    </p>
+  );
+};
+
+const images = [
+  "https://picsum.photos/id/1015/800/500",
+  "https://picsum.photos/id/1016/800/500",
+  "https://picsum.photos/id/1018/800/500",
+  "https://picsum.photos/id/1020/800/500",
+];
+
+const Gallery = () => {
+  const [index, setIndex] = useState(0);
+  const [showGallery, setShowGallery] = useState(false);
+  const imgRef = useRef(null);
+  const zoomRef = useRef(1);
+
+  // Funzione per zoom con rotellina mouse
+  const onWheel = (e) => {
+    e.preventDefault();
+    let newZoom = zoomRef.current - e.deltaY * 0.001;
+    newZoom = Math.min(Math.max(newZoom, 1), 3);
+    zoomRef.current = newZoom;
+    if (imgRef.current) {
+      imgRef.current.style.transform = `scale(${newZoom})`;
+    }
+  };
+
+  // Navigazione galleria
+  const prev = () => {
+    setIndex((i) => (i === 0 ? images.length - 1 : i - 1));
+    resetZoom();
+  };
+  const next = () => {
+    setIndex((i) => (i === images.length - 1 ? 0 : i + 1));
+    resetZoom();
+  };
+
+  const resetZoom = () => {
+    zoomRef.current = 1;
+    if (imgRef.current) {
+      imgRef.current.style.transform = `scale(1)`;
+    }
+  };
+
+  // Callback quando animazione scritta finisce
+  const onTextAnimationComplete = () => {
+    setShowGallery(true);
+  };
+
+  return (
+    <div
+      style={{
+        maxWidth: 900,
+        margin: "50px auto",
+        textAlign: "center",
+        position: "relative",
+        userSelect: "none",
+      }}
+    >
+      {!showGallery && (
+        <SplitText
+          text="Welcome to gallery by mr.yabbit and bixy team"
+          onComplete={onTextAnimationComplete}
+          delay={80}
+          duration={0.7}
+          splitType="chars"
+          from={{ opacity: 0, y: 40 }}
+          to={{ opacity: 1, y: 0 }}
+        />
+      )}
+
+      {showGallery && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 20,
+          }}
+        >
+          <button
+            onClick={prev}
+            style={{
+              fontSize: 24,
+              padding: "10px 15px",
+              cursor: "pointer",
+              userSelect: "none",
+            }}
+            aria-label="Previous Image"
+          >
+            ◀
+          </button>
+
+          <div
+            style={{
+              overflow: "hidden",
+              width: 800,
+              height: 500,
+              borderRadius: 10,
+              boxShadow: "0 0 10px rgba(0,0,0,0.3)",
+            }}
+            onWheel={onWheel}
+          >
+            <img
+              ref={imgRef}
+              src={images[index]}
+              alt={`Gallery image ${index + 1}`}
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                transition: "transform 0.3s ease",
+              }}
+              draggable={false}
+            />
+          </div>
+
+          <button
+            onClick={next}
+            style={{
+              fontSize: 24,
+              padding: "10px 15px",
+              cursor: "pointer",
+              userSelect: "none",
+            }}
+            aria-label="Next Image"
+          >
+            ▶
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Gallery;

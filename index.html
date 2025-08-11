@@ -5,78 +5,77 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Bixy Gallery</title>
 <style>
-  body, html {
+  html, body {
     margin: 0; padding: 0; height: 100vh; overflow: hidden;
     background: url('https://videos.openai.com/vg-assets/assets%2Ftask_01k2dbqck4ec39ct0mjn6ezv7x%2F1754942775_img_0.webp?st=2025-08-11T19%3A05%3A10Z&se=2025-08-17T20%3A05%3A10Z&sks=b&skt=2025-08-11T19%3A05%3A10Z&ske=2025-08-17T20%3A05%3A10Z&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skoid=aa5ddad1-c91a-4f0a-9aca-e20682cc8969&skv=2019-02-02&sv=2018-11-09&sr=b&sp=r&spr=https%2Chttp&sig=7Svtf6LiODmDC2sFmSbmsCmZED3Hx0fLn0IkWVJOkS4%3D&az=oaivgprodscus') no-repeat center center / cover;
-    display: flex;
-    justify-content: center;
-    align-items: center;
     font-family: Arial, sans-serif;
     color: #ddd;
     user-select: none;
   }
-
   #welcome {
-    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-size: 2.5rem;
     white-space: nowrap;
     overflow: hidden;
-    font-size: 2.5rem;
     border-right: 0.15em solid #ddd;
     animation: typing 4s steps(40, end), blink 0.75s step-end infinite;
   }
-
   @keyframes typing {
     from { width: 0; }
     to { width: 100%; }
   }
-
   @keyframes blink {
     50% { border-color: transparent; }
   }
 
   #gallery {
-    position: relative;
-    height: 100%;
-    width: 100%;
     display: none;
+    height: 100vh;
+    width: 100vw;
+    position: relative;
     overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
-
   #gallery img {
-    position: absolute;
-    top: 50%;
-    left: 50%;
     max-width: 100%;
     max-height: 100%;
-    transform: translate(-50%, -50%) scale(1);
-    transition: transform 0.3s ease;
     cursor: zoom-in;
+    user-select: none;
+    transform-origin: center center;
+    transition: transform 0.3s ease;
+    will-change: transform;
+    position: relative;
+    z-index: 1;
   }
 
   .arrow {
     position: absolute;
     bottom: 20px;
     font-size: 4rem;
-    color: rgba(255, 255, 255, 0.5);
-    text-shadow: 0 0 8px rgba(0,0,0,0.7);
+    color: rgba(255,255,255,0.7);
+    text-shadow: 0 0 10px rgba(255,255,255,0.9);
     cursor: pointer;
     user-select: none;
     transition: color 0.3s ease, opacity 0.3s ease;
     opacity: 0;
+    z-index: 10;
+    filter: drop-shadow(0 0 6px #fff);
   }
   .arrow:hover {
-    color: rgba(255,255,255,0.9);
+    color: #fff;
+    opacity: 1;
+    filter: drop-shadow(0 0 12px #fff);
   }
   .arrow.visible {
-    opacity: 0.5;
+    opacity: 0.7;
   }
-
-  #arrow-left {
-    left: 30px;
-  }
-  #arrow-right {
-    right: 30px;
-  }
+  #arrow-left { left: 30px; }
+  #arrow-right { right: 30px; }
 </style>
 </head>
 <body>
@@ -96,7 +95,6 @@
   const rightArrow = document.getElementById('arrow-right');
   const galleryImage = document.getElementById('galleryImage');
 
-  // Immagini fornite da te
   const images = [
     "https://i.imgur.com/ENoxKN6.png",
     "https://i.imgur.com/w04etJR.jpeg",
@@ -104,58 +102,51 @@
   ];
   let currentIndex = 0;
 
-  // Funzione per precaricare immagini
-  function preloadImages(urls, allDone) {
-    let loaded = 0;
-    urls.forEach((url) => {
-      const img = new Image();
-      img.src = url;
-      img.onload = () => {
-        loaded++;
-        if (loaded === urls.length) allDone();
-      };
-      img.onerror = () => {
-        loaded++;
-        if (loaded === urls.length) allDone();
-      };
-    });
-  }
+  let zoomed = false;
+  let dragging = false;
+  let startX, startY;
+  let translateX = 0;
+  let translateY = 0;
+  let scale = 1;
 
   function updateImage() {
     galleryImage.src = images[currentIndex];
     resetZoom();
   }
 
-  leftArrow.addEventListener('click', () => {
+  function resetZoom() {
+    zoomed = false;
+    scale = 1;
+    translateX = 0;
+    translateY = 0;
+    applyTransform();
+    galleryImage.style.cursor = 'zoom-in';
+  }
+
+  function applyTransform() {
+    galleryImage.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+  }
+
+  leftArrow.addEventListener('click', (e) => {
+    e.stopPropagation(); // evita che il click passi all'immagine sottostante
     currentIndex = (currentIndex - 1 + images.length) % images.length;
     updateImage();
   });
 
-  rightArrow.addEventListener('click', () => {
+  rightArrow.addEventListener('click', (e) => {
+    e.stopPropagation();
     currentIndex = (currentIndex + 1) % images.length;
     updateImage();
   });
 
-  // Zoom e pan
-  let zoomed = false;
-  let dragging = false;
-  let startX, startY, translateX = 0, translateY = 0;
-
-  function resetZoom() {
-    zoomed = false;
-    translateX = 0;
-    translateY = 0;
-    galleryImage.style.transform = 'translate(-50%, -50%) scale(1)';
-    galleryImage.style.cursor = 'zoom-in';
-  }
-
   galleryImage.addEventListener('click', () => {
-    zoomed = !zoomed;
     if (zoomed) {
-      galleryImage.style.transform = `translate(-50%, -50%) scale(2)`;
-      galleryImage.style.cursor = 'grab';
-    } else {
       resetZoom();
+    } else {
+      zoomed = true;
+      scale = 2;
+      galleryImage.style.cursor = 'grab';
+      applyTransform();
     }
   });
 
@@ -176,20 +167,34 @@
     if (!dragging) return;
     translateX = e.clientX - startX;
     translateY = e.clientY - startY;
-    galleryImage.style.transform = `translate(calc(-50% + ${translateX}px), calc(-50% + ${translateY}px)) scale(2)`;
+    applyTransform();
   });
 
-  // Precarica immagini e mostra galleria dopo animazione
+  function preloadImages(urls, callback) {
+    let loaded = 0;
+    urls.forEach(url => {
+      const img = new Image();
+      img.src = url;
+      img.onload = () => {
+        loaded++;
+        if (loaded === urls.length) callback();
+      };
+      img.onerror = () => {
+        loaded++;
+        if (loaded === urls.length) callback();
+      };
+    });
+  }
+
   preloadImages(images, () => {
     setTimeout(() => {
       welcome.style.display = 'none';
-      gallery.style.display = 'block';
+      gallery.style.display = 'flex';
       leftArrow.classList.add('visible');
       rightArrow.classList.add('visible');
       updateImage();
     }, 5000);
   });
-
 </script>
 
 </body>

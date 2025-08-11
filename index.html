@@ -1,24 +1,147 @@
-<h1 id="animated-text"></h1>
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bixy Gallery</title>
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        background: url('https://videos.openai.com/vg-assets/assets%2Ftask_01k2dbqck4ec39ct0mjn6ezv7x%2F1754942775_img_0.webp?st=2025-08-11T19%3A05%3A10Z&se=2025-08-17T20%3A05%3A10Z&sks=b&skt=2025-08-11T19%3A05%3A10Z&ske=2025-08-17T20%3A05%3A10Z&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skoid=aa5ddad1-c91a-4f0a-9aca-e20682cc8969&skv=2019-02-02&sv=2018-11-09&sr=b&sp=r&spr=https%2Chttp&sig=7Svtf6LiODmDC2sFmSbmsCmZED3Hx0fLn0IkWVJOkS4%3D&az=oaivgprodscus') no-repeat center center/cover;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+    }
+
+    #welcome {
+        font-size: 2.5rem;
+        color: #ddd;
+        text-align: center;
+        font-family: Arial, sans-serif;
+        white-space: nowrap;
+        overflow: hidden;
+        border-right: .15em solid #ddd;
+        animation: typing 4s steps(40, end), blink .75s step-end infinite;
+        position: absolute;
+    }
+
+    @keyframes typing {
+        from { width: 0; }
+        to { width: 100%; }
+    }
+
+    @keyframes blink {
+        from, to { border-color: transparent }
+        50% { border-color: #ddd; }
+    }
+
+    .arrow {
+        position: absolute;
+        bottom: 20px;
+        font-size: 3rem;
+        color: white;
+        opacity: 0.5;
+        cursor: pointer;
+        user-select: none;
+        display: none;
+    }
+
+    .arrow:hover {
+        opacity: 1;
+    }
+
+    #leftArrow { left: 40%; }
+    #rightArrow { right: 40%; }
+
+    #galleryImage {
+        max-width: 100%;
+        max-height: 100%;
+        transition: transform 0.3s ease;
+        cursor: zoom-in;
+    }
+</style>
+</head>
+<body>
+
+<div id="welcome">Welcome to gallery by mr.yabbit and bixy team</div>
+
+<div id="leftArrow" class="arrow">&#60;</div>
+<div id="rightArrow" class="arrow">&#62;</div>
+
+<img id="galleryImage" src="https://placekitten.com/800/500" alt="Gallery Image">
 
 <script>
-  const text = "Welcome to gallery by mr.yabbit and bixy team";
-  const container = document.getElementById("animated-text");
-  let index = 0;
+    const welcome = document.getElementById('welcome');
+    const leftArrow = document.getElementById('leftArrow');
+    const rightArrow = document.getElementById('rightArrow');
+    const galleryImage = document.getElementById('galleryImage');
 
-  function showNextChar() {
-    if(index < text.length) {
-      container.textContent += text.charAt(index);
-      index++;
-      setTimeout(showNextChar, 80); // velocità animazione
-    } else {
-      // Dopo animazione, fai partire la galleria o altre cose
-      setTimeout(() => {
-        document.querySelector("h1").style.display = "none";
-        document.getElementById("gallery").style.display = "flex";
-        showImage(0); // se usi la galleria di prima
-      }, 1000);
-    }
-  }
+    // Dopo l'animazione di welcome
+    setTimeout(() => {
+        welcome.style.display = 'none';
+        leftArrow.style.display = 'block';
+        rightArrow.style.display = 'block';
+    }, 5000);
 
-  showNextChar();
+    // Galleria immagini
+    const images = [
+        "https://placekitten.com/800/500",
+        "https://placekitten.com/801/500",
+        "https://placekitten.com/802/500"
+    ];
+    let currentIndex = 0;
+
+    leftArrow.addEventListener('click', () => {
+        currentIndex = (currentIndex - 1 + images.length) % images.length;
+        galleryImage.src = images[currentIndex];
+    });
+
+    rightArrow.addEventListener('click', () => {
+        currentIndex = (currentIndex + 1) % images.length;
+        galleryImage.src = images[currentIndex];
+    });
+
+    // Zoom e panning
+    let zoomed = false;
+    let isDragging = false;
+    let startX, startY, translateX = 0, translateY = 0;
+
+    galleryImage.addEventListener('click', () => {
+        zoomed = !zoomed;
+        if (zoomed) {
+            galleryImage.style.transform = `scale(2) translate(${translateX}px, ${translateY}px)`;
+            galleryImage.style.cursor = 'grab';
+        } else {
+            galleryImage.style.transform = 'scale(1) translate(0,0)';
+            translateX = 0;
+            translateY = 0;
+            galleryImage.style.cursor = 'zoom-in';
+        }
+    });
+
+    galleryImage.addEventListener('mousedown', (e) => {
+        if (!zoomed) return;
+        isDragging = true;
+        startX = e.clientX - translateX;
+        startY = e.clientY - translateY;
+        galleryImage.style.cursor = 'grabbing';
+    });
+
+    document.addEventListener('mouseup', () => {
+        isDragging = false;
+        if (zoomed) galleryImage.style.cursor = 'grab';
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        translateX = e.clientX - startX;
+        translateY = e.clientY - startY;
+        galleryImage.style.transform = `scale(2) translate(${translateX}px, ${translateY}px)`;
+    });
 </script>
+
+</body>
+</html>

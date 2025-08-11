@@ -22,10 +22,13 @@
     overflow: hidden;
     border-right: 0.15em solid #ddd;
     animation: typing 4s steps(40, end), blink 0.75s step-end infinite;
+    box-sizing: content-box;
+    width: 38ch; /* lunghezza adatta al testo "Welcome to gallery by mr.yabbit and bixy team" */
+    max-width: 100%;
   }
   @keyframes typing {
     from { width: 0; }
-    to { width: 100%; }
+    to { width: 38ch; }
   }
   @keyframes blink {
     50% { border-color: transparent; }
@@ -128,7 +131,7 @@
   }
 
   leftArrow.addEventListener('click', (e) => {
-    e.stopPropagation(); // evita che il click passi all'immagine sottostante
+    e.stopPropagation();
     currentIndex = (currentIndex - 1 + images.length) % images.length;
     updateImage();
   });

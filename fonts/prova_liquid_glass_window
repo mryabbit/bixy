@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Liquid Glass draggable window</title>
+<style>
+body {
+  height: 100vh;
+  margin: 0;
+  background: url('https://raw.githubusercontent.com/mryabbit/bixy/refs/heads/main/image1.png') no-repeat center center fixed;
+  background-size: cover;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+.liquid-glass-window {
+  position: absolute;
+  top: 50px;
+  left: 50px;
+  width: 250px;
+  height: 120px;
+  backdrop-filter: saturate(180%) blur(18px);
+  -webkit-backdrop-filter: saturate(180%) blur(1px);
+  background: rgba(255, 255, 255, 0);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 6px 30px rgba(0, 0, 0, 0.3);
+  color: white;
+  font-size: 32px;
+  font-weight: 700;
+  text-align: center;
+  line-height: 120px;
+  cursor: grab;
+  user-select: none;
+  border-radius: 28% / 50%;
+  /* Aggiunta di effetto di distorsione con filtro */
+  filter: url(#distort);
+  /* Oppure usando effetti di CSS3 come esempio: */
+  /* filter: contrast(1.2) saturate(1.3) brightness(1.05); */
+}
+    /* Liquid Glass squircle corners */
+    border-radius: 28% / 50%;
+  
+  .liquid-glass-window:active {
+    cursor: grabbing;
+  }
+</style>
+</head>
+<body>
+
+<div class="liquid-glass-window" id="dragWindow">Hello World</div>
+
+<script>
+  const dragWindow = document.getElementById("dragWindow");
+
+  let posX = 0, posY = 0, mouseX = 0, mouseY = 0;
+
+  dragWindow.addEventListener("mousedown", dragStart);
+  dragWindow.addEventListener("touchstart", dragStart, { passive: false });
+
+  function dragStart(e) {
+    e.preventDefault();
+    mouseX = e.type === "touchstart" ? e.touches[0].clientX : e.clientX;
+    mouseY = e.type === "touchstart" ? e.touches[0].clientY : e.clientY;
+    document.addEventListener("mousemove", dragMove);
+    document.addEventListener("touchmove", dragMove, { passive: false });
+    document.addEventListener("mouseup", dragEnd);
+    document.addEventListener("touchend", dragEnd);
+  }
+
+  function dragMove(e) {
+    e.preventDefault();
+    let currentX = e.type === "touchmove" ? e.touches[0].clientX : e.clientX;
+    let currentY = e.type === "touchmove" ? e.touches[0].clientY : e.clientY;
+    let dx = currentX - mouseX;
+    let dy = currentY - mouseY;
+    posX += dx;
+    posY += dy;
+    dragWindow.style.left = `${posX}px`;
+    dragWindow.style.top = `${posY}px`;
+    mouseX = currentX;
+    mouseY = currentY;
+  }
+
+  function dragEnd() {
+    document.removeEventListener("mousemove", dragMove);
+    document.removeEventListener("touchmove", dragMove);
+    document.removeEventListener("mouseup", dragEnd);
+    document.removeEventListener("touchend", dragEnd);
+  }
+</script>
+
+</body>
+</html>

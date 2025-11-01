@@ -1,1 +1,98 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Liquid Glass con Distorsione Bordi</title>
+<style>
+  body {
+    margin: 0;
+    height: 100vh;
+    background: url('https://raw.githubusercontent.com/mryabbit/bixy/refs/heads/main/image1.png') no-repeat center center fixed;
+    background-size: cover;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+      Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+    overflow: hidden;
+    user-select: none;
+  }
 
+  .liquid-glass-window {
+    position: absolute;
+    top: 50px;
+    left: 50px;
+    width: 300px;
+    height: 150px;
+    background: rgba(255 255 255 / 0.1);
+    border-radius: 28% / 50%;
+    border: 1px solid rgba(255 255 255 / 0.2);
+    backdrop-filter: saturate(180%) blur(1px);
+    -webkit-backdrop-filter: saturate(180%) blur(18px);
+    box-shadow: 0 10px 40px rgba(0 0 0 / 0.25);
+    filter: url(#displacement);
+    color: white;
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 150px;
+    text-align: center;
+    cursor: grab;
+  }
+
+  .liquid-glass-window:active {
+    cursor: grabbing;
+  }
+</style>
+</head>
+<body>
+
+<div class="liquid-glass-window" id="dragWindow">Hello World</div>
+
+<!-- SVG filter che crea la distorsione liquid glass -->
+<svg style="display:none;">
+  <filter id="displacement" x="0" y="0" width="100%" height="100%">
+    <feTurbulence id="turbulence" type="turbulence" baseFrequency="0.02 0.03" numOctaves="2" seed="2" result="turbulence"/>
+    <feDisplacementMap in="SourceGraphic" in2="turbulence" scale="10" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+</svg>
+
+<script>
+  const dragWindow = document.getElementById("dragWindow");
+
+  let posX = 0, posY = 0, mouseX = 0, mouseY = 0;
+
+  dragWindow.addEventListener("mousedown", dragStart);
+  dragWindow.addEventListener("touchstart", dragStart, { passive: false });
+
+  function dragStart(e) {
+    e.preventDefault();
+    mouseX = e.type === "touchstart" ? e.touches[0].clientX : e.clientX;
+    mouseY = e.type === "touchstart" ? e.touches[0].clientY : e.clientY;
+    document.addEventListener("mousemove", dragMove);
+    document.addEventListener("touchmove", dragMove, { passive: false });
+    document.addEventListener("mouseup", dragEnd);
+    document.addEventListener("touchend", dragEnd);
+  }
+
+  function dragMove(e) {
+    e.preventDefault();
+    let currentX = e.type === "touchmove" ? e.touches[0].clientX : e.clientX;
+    let currentY = e.type === "touchmove" ? e.touches[0].clientY : e.clientY;
+    let dx = currentX - mouseX;
+    let dy = currentY - mouseY;
+    posX += dx;
+    posY += dy;
+    dragWindow.style.left = `${posX}px`;
+    dragWindow.style.top = `${posY}px`;
+    mouseX = currentX;
+    mouseY = currentY;
+  }
+
+  function dragEnd() {
+    document.removeEventListener("mousemove", dragMove);
+    document.removeEventListener("touchmove", dragMove);
+    document.removeEventListener("mouseup", dragEnd);
+    document.removeEventListener("touchend", dragEnd);
+  }
+</script>
+
+</body>
+</html>
